@@ -1,0 +1,77 @@
+{
+  "assets": {
+    "icon": "soap-gold-icon",
+    "social_cover": "soap-gold-og",
+    "wordmark": "soap-gold-logo"
+  },
+  "brand": {
+    "description": "Soap Gold is a UK soaps heritage fan site celebrating Emmerdale and Coronation Street history: classic storylines retold properly, anniversaries marked, iconic characters celebrated, and the sets and locations fans still visit today.",
+    "name": "Soap Gold",
+    "site_email": "daseknahri@gmail.com",
+    "social": {
+      "facebook": "",
+      "instagram": "",
+      "x": "",
+      "youtube": ""
+    },
+    "tagline": "The soaps you grew up with — their greatest stories, told properly."
+  },
+  "categories": [
+    {
+      "description": "The greatest Emmerdale and Coronation Street storylines ever broadcast, retold properly from the original episodes — who did what, why it mattered, and how it ended.",
+      "name": "Classic Storylines Retold",
+      "slug": "classic-storylines"
+    },
+    {
+      "description": "What happened on this day in soap history: first episodes, famous exits, weddings, disasters and the moments everyone still talks about.",
+      "name": "On This Day",
+      "slug": "on-this-day"
+    },
+    {
+      "description": "The characters who made the soaps — and the actors who played them: profiles, best moments and where-are-they-now features.",
+      "name": "Iconic Characters",
+      "slug": "iconic-characters"
+    },
+    {
+      "description": "Round-number anniversaries, episode-count milestones and landmark moments from more than half a century of the Dales and the cobbles.",
+      "name": "Anniversaries & Milestones",
+      "slug": "anniversaries-milestones"
+    },
+    {
+      "description": "The famous sets, villages and locations behind the soaps — how they were built, how they changed, and how fans can visit them today.",
+      "name": "Sets, Locations & Tours",
+      "slug": "sets-locations-tours"
+    }
+  ],
+  "locales": {
+    "admin": "en_US",
+    "force_admin": true,
+    "public": "en_GB"
+  },
+  "nav": {
+    "primary_categories": 5
+  },
+  "slugs": {
+    "about": "about",
+    "contact": "contact",
+    "cookies": "cookie-policy",
+    "disclaimer": "disclaimer",
+    "editorial": "editorial-policy",
+    "privacy": "privacy-policy",
+    "terms": "terms"
+  },
+  "writer": {
+    "bio": "Soap Gold is written by lifelong soap fans, for lifelong soap fans. The team retells the classic Emmerdale and Coronation Street storylines from the original broadcasts, listings and cast interviews — celebrating the history of the soaps you grew up with, and always labelling a theory as a theory.",
+    "email": "daseknahri@gmail.com",
+    "name": "Soap Gold Team",
+    "photo": "soap-gold-icon.png",
+    "social": {
+      "facebook": "",
+      "instagram": "",
+      "pinterest": "",
+      "website": "",
+      "x": "",
+      "youtube": ""
+    }
+  }
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "description": "The greatest Emmerdale and Coronation Street storylines ever broadcast, retold properly from the original episodes — who did what, why it mattered, and how it ended.",
+    "name": "Classic Storylines Retold",
+    "slug": "classic-storylines"
+  },
+  {
+    "description": "What happened on this day in soap history: first episodes, famous exits, weddings, disasters and the moments everyone still talks about.",
+    "name": "On This Day",
+    "slug": "on-this-day"
+  },
+  {
+    "description": "The characters who made the soaps — and the actors who played them: profiles, best moments and where-are-they-now features.",
+    "name": "Iconic Characters",
+    "slug": "iconic-characters"
+  },
+  {
+    "description": "Round-number anniversaries, episode-count milestones and landmark moments from more than half a century of the Dales and the cobbles.",
+    "name": "Anniversaries & Milestones",
+    "slug": "anniversaries-milestones"
+  },
+  {
+    "description": "The famous sets, villages and locations behind the soaps — how they were built, how they changed, and how fans can visit them today.",
+    "name": "Sets, Locations & Tours",
+    "slug": "sets-locations-tours"
+  }
+]

@@ -1,0 +1,123 @@
+<?php
+/**
+ * Plugin Name: SG Page Cache
+ * Description: Tiny full-page cache for the Soap Gold site. Serves anonymous HTML visitors
+ *              from disk (per URL + phone/desktop, because ad units are sized per device), stores at
+ *              shutdown, purges on publish. Logged-in users, commenters and editors always bypass.
+ *              The companion drop-in wp-content/advanced-cache.php serves the same files earlier
+ *              in the bootstrap; this plugin stays the storing/purging half.
+ * Version: 1.1.0
+ */
+
+define( 'SGPC_TTL', 30 * MINUTE_IN_SECONDS );
+define( 'SGPC_DIR', WP_CONTENT_DIR . '/cache/sg-page' );
+define( 'SGPC_MAXFILES', 400 );
+
+/* ---------- purge (registered in EVERY context, wp-admin and WP-CLI alike) ----------
+   Publishing on this site happens through wp-cli as often as through wp-admin; if the purge
+   hooks sat below the WP-CLI gate, CLI publishes would leave stale snapshots behind. Serving
+   and storing stay HTTP-only (gated further down). */
+
+function sgpc_purge_all() {
+	$files = glob( SGPC_DIR . '/*.html' );
+	if ( is_array( $files ) ) { foreach ( $files as $f ) { @unlink( $f ); } }
+}
+
+/* Any publish/update/trash: clear everything (the catalogue is small; a fresh
+   page is rebuilt on the next visit, invisibly to the visitor). */
+add_action( 'transition_post_status', function ( $new, $old, $post ) {
+	if ( 'post' !== $post->post_type ) { return; }
+	if ( $new === $old ) { return; }
+	sgpc_purge_all();
+}, 10, 3 );
+
+/* Same-status edits (a corrected headline, a fixed typo in a live article) change no status,
+   so the hook above misses them and readers would keep the stale snapshot until the TTL.
+   Purge when an already-published post is updated in place. */
+add_action( 'post_updated', function ( $post_id, $post_after ) {
+	if ( 'post' !== $post_after->post_type ) { return; }
+	if ( 'publish' !== $post_after->post_status ) { return; }
+	sgpc_purge_all();
+}, 10, 2 );
+
+if ( defined( 'WP_CLI' ) && WP_CLI ) { return; }
+
+/* ---------- helpers ---------- */
+
+function sgpc_is_mobile() {
+	if ( function_exists( 'wp_is_mobile' ) ) { return wp_is_mobile(); }
+	return isset( $_SERVER['HTTP_USER_AGENT'] ) && preg_match( '#Mobile|Android|iPhone|iPod#i', (string) $_SERVER['HTTP_USER_AGENT'] );
+}
+
+/* Requests we must never serve from or store into the cache. */
+function sgpc_bypass() {
+	if ( 'GET' !== strtoupper( (string) $_SERVER['REQUEST_METHOD'] ) ) { return true; }
+	if ( is_admin() || defined( 'WP_ADMIN' ) ) { return true; }
+	$uri = (string) $_SERVER['REQUEST_URI'];
+	if ( false !== strpos( $uri, '/wp-' ) || false !== strpos( $uri, 'preview' ) || false !== strpos( $uri, 'feed' ) ) { return true; }
+	if ( '' !== (string) $_SERVER['QUERY_STRING'] ) { return true; }
+	foreach ( array_keys( $_COOKIE ) as $c ) {
+		if ( preg_match( '/^(wordpress_logged_in|wp-postpass|comment_author)/', $c ) ) { return true; }
+	}
+	if ( isset( $_COOKIE['wordpress_test_cookie'] ) ) { return true; }   /* someone just logged out / login page visitor */
+	if ( function_exists( 'is_user_logged_in' ) && is_user_logged_in() ) { return true; }
+	return false;
+}
+
+function sgpc_file() {
+	$uri  = (string) $_SERVER['REQUEST_URI'];
+	$host = strtolower( (string) $_SERVER['HTTP_HOST'] );
+	$key  = $host . $uri . ( sgpc_is_mobile() ? '|m' : '|d' );
+	return SGPC_DIR . '/' . md5( $key ) . '.html';
+}
+
+/* ---------- serve (earliest possible point in the bootstrap) ---------- */
+
+add_action( 'muplugins_loaded', function () {
+	if ( sgpc_bypass() ) { return; }
+	$f = sgpc_file();
+	if ( is_readable( $f ) && ( time() - filemtime( $f ) ) < SGPC_TTL ) {
+		$status = (int) substr( (string) @file_get_contents( $f, false, null, 0, 3 ), 0, 3 );
+		if ( 200 !== $status ) { return; }
+		header( 'Content-Type: text/html; charset=UTF-8' );
+		header( 'Vary: User-Agent' );   /* cache is keyed per device class; proxies must not mix them */
+		header( 'X-SG-Cache: hit' );
+		$fp = fopen( $f, 'rb' );
+		fseek( $fp, 3 );               /* skip the 3-byte status prefix */
+		fpassthru( $fp );
+		fclose( $fp );
+		exit;
+	}
+}, 0 );
+
+/* ---------- store ---------- */
+
+add_action( 'template_redirect', function () {
+	if ( sgpc_bypass() ) { return; }
+	ob_start( function ( $html ) {
+		$status = http_response_code();
+		if ( 200 !== $status || '' === $html ) { return $html; }
+		$ct = '';
+		foreach ( headers_list() as $h ) { if ( 0 === stripos( $h, 'Content-Type:' ) ) { $ct = $h; break; } }
+		if ( false === stripos( $ct, 'text/html' ) ) { return $html; }
+		if ( is_user_logged_in() || isset( $_COOKIE['wordpress_logged_in_' . COOKIEHASH] ) ) { return $html; }
+		sgpc_store( $html );
+		return $html;
+	} );
+}, 0 );
+
+function sgpc_store( $html ) {
+	if ( ! is_dir( SGPC_DIR ) ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.mkdir_error_suppression -- cache dir under wp-content.
+		@mkdir( SGPC_DIR, 0755, true );
+	}
+	if ( ! is_writable( SGPC_DIR ) ) { return; }
+	/* Evict oldest files when the cache grows past the cap. */
+	$files = glob( SGPC_DIR . '/*.html' );
+	if ( is_array( $files ) && count( $files ) >= SGPC_MAXFILES ) {
+		usort( $files, function ( $a, $b ) { return filemtime( $a ) - filemtime( $b ); } );
+		foreach ( array_slice( $files, 0, 40 ) as $old ) { @unlink( $old ); }
+	}
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- cache write.
+	@file_put_contents( sgpc_file(), '200' . $html, LOCK_EX );
+}

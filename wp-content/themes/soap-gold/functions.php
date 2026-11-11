@@ -260,7 +260,7 @@ function sg_top_ad() {
 		$fb     = $latest ? $latest[0] : null;
 	}
 	echo '<div class="vr-ad-strip sg-top ' . ( wp_is_mobile() ? 'sg-top--m' : 'sg-top--d' ) . '"><div class="vr-ad-strip__inner">';
-	echo '<div class="wpap-ad wpap-ad-zone-header"></div>';
+	echo '<div class="wpap-ad wpap-ad-zone-header">' . sg_ad_ins( $client, '6634489785' ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in sg_ad_ins()
 	if ( $fb ) {
 		echo '<a class="sg-top-fb" href="' . esc_url( get_permalink( $fb ) ) . '"><span>Most read</span><strong>' . esc_html( get_the_title( $fb ) ) . '</strong><em>Read now &rarr;</em></a>';
 	}
@@ -299,7 +299,7 @@ add_action( 'the_post', function ( $post, $query ) {
 	if ( $n <= 1 || 0 !== ( $n - 1 ) % SG_FEED_EVERY || ( $n - 1 ) / SG_FEED_EVERY > $max ) { return; }
 	$client = sg_ad_client();
 	if ( '' === $client ) { return; }
-	echo '<div class="sg-feed-ad"><div class="wpap-ad wpap-ad-feed"></div></div>';
+	echo '<div class="sg-feed-ad"><div class="wpap-ad wpap-ad-feed">' . sg_ad_ins( $client, '6714380837' ) . '</div></div>'; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in sg_ad_ins()
 }, 10, 2 );
 
 /* ---------- Visitor statistics (Histats) ----------
